@@ -10,6 +10,16 @@
 7. [Decisiones Técnicas y Justificación](#decisiones-técnicas-y-justificación)
 8. [Ejecución del Proyecto](#ejecución-del-proyecto)
 
+---
+
+## 📖 Introducción
+
+Este proyecto implementa un proceso completo de **análisis de datos de videojuegos** utilizando dos enfoques complementarios:
+- **Pandas**: Para procesamiento en memoria y análisis exploratorio
+- **PySpark**: Para procesamiento distribuido y escalabilidad
+
+El objetivo principal es realizar la **exploración, limpieza, transformación y carga (ETL)** de un dataset de videojuegos, culminando en la creación de un **data warehouse dimensional** almacenado en bases de datos SQLite.
+
 
 ## 🧹 Fase 1: Exploración y Limpieza con Pandas
 
