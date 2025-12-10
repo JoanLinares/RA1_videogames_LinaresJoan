@@ -1,0 +1,23 @@
+services:
+  jupyter-datascience:
+    build:
+      context: .
+      dockerfile: DOCKERFILE
+    container_name: ra1_videogames_analysis
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/app/notebooks
+      - ./data:/app/data
+      - ./warehouse:/app/warehouse
+      - ./docs:/app/docs
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    working_dir: /app
+    restart: unless-stopped
+    networks:
+      - datascience_network
+
+networks:
+  datascience_network:
+    driver: bridge
