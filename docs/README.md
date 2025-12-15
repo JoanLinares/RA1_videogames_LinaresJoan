@@ -445,130 +445,43 @@ fact_videogames_pd.to_sql('fact_videogames', conn, if_exists='replace')
 
 El modelo dimensional permite responder preguntas de negocio complejas con consultas SQL simples. A continuación se muestran ejemplos prácticos:
 
-### 1. **¿Cuáles son los géneros más rentables?**
+### **2 consultas para Pandas**
+**PANDAS 1 – Géneros más rentables**
 
 ```sql
 SELECT 
-    g.genre,
-    COUNT(*) as total_juegos,
-    ROUND(SUM(f.copies_sold_millions_num), 2) as ventas_totales_millones,
-    ROUND(AVG(f.metascore_num), 2) as puntuacion_promedio
-FROM fact_videogames f
-JOIN dim_genre g ON f.genre_id = g.genre_id
-GROUP BY g.genre
+    g.genre_name AS genre,
+    COUNT(*) AS total_juegos,
+    ROUND(SUM(f.copies_sold_millions_num), 2) AS ventas_totales_millones,
+    ROUND(AVG(f.metascore_num), 2) AS puntuacion_promedio
+FROM fact_videogame f
+JOIN dim_genre g 
+    ON f.genre_id = g.genre_id
+GROUP BY g.genre_name
 ORDER BY ventas_totales_millones DESC
 LIMIT 10;
 ```
 
-**Resultado esperado:**
-```
-genre     | total_juegos | ventas_totales_millones | puntuacion_promedio
-----------|--------------|-------------------------|--------------------
-Action    | 1250         | 4523.45                | 78.5
-Sports    | 890          | 3876.23                | 76.2
-RPG       | 765          | 2987.65                | 82.1
-Shooter   | 654          | 2654.32                | 79.8
-...
-```
-
-**Insight de negocio**: Identifica qué géneros invertir para maximizar ROI.
-
----
-
-### 2. **¿Qué plataforma tiene el mejor rendimiento promedio?**
+**PANDAS 2 – Plataforma con mejor rendimiento promedio**
 
 ```sql
 SELECT 
-    p.platform,
-    COUNT(*) as num_juegos,
-    ROUND(AVG(f.metascore_num), 2) as metascore_promedio,
-    ROUND(AVG(f.copies_sold_millions_num), 2) as ventas_promedio_por_juego
-FROM fact_videogames f
-JOIN dim_platform p ON f.platform_id = p.platform_id
-GROUP BY p.platform
+    p.platform_name AS platform,
+    COUNT(*) AS num_juegos,
+    ROUND(AVG(f.metascore_num), 2) AS metascore_promedio,
+    ROUND(AVG(f.copies_sold_millions_num), 2) AS ventas_promedio_por_juego
+FROM fact_videogame f
+JOIN dim_platform p 
+    ON f.platform_id = p.platform_id
+GROUP BY p.platform_name
 ORDER BY metascore_promedio DESC;
 ```
 
-**Resultado esperado:**
-```
-platform | num_juegos | metascore_promedio | ventas_promedio_por_juego
----------|------------|--------------------|--------------------------
-PC       | 2345       | 79.5              | 1.8
-PS       | 1987       | 78.2              | 2.3
-Switch   | 1234       | 77.8              | 2.1
-Xbox     | 1456       | 76.9              | 1.9
-Mobile   | 3456       | 68.4              | 0.4
-```
-
-**Insight de negocio**: PC tiene mejores puntuaciones pero PS vende más por juego. Mobile tiene baja calidad pero alto volumen.
-
 ---
 
-### 3. **¿Cuáles son los blockbusters por género?**
+### **2 consultas para PySpark**
 
-```sql
-SELECT 
-    g.genre,
-    f.name,
-    f.copies_sold_millions_num,
-    f.metascore_num,
-    f.categoria_ventas
-FROM fact_videogames f
-JOIN dim_genre g ON f.genre_id = g.genre_id
-WHERE f.categoria_ventas = 'Alto'
-ORDER BY f.copies_sold_millions_num DESC
-LIMIT 20;
-```
-
-**Resultado esperado:**
-```
-genre   | name                  | copies_sold | metascore | categoria_ventas
---------|-----------------------|-------------|-----------|------------------
-Action  | Grand Theft Auto V    | 185.0       | 97        | Alto
-Sports  | FIFA 23               | 32.5        | 82        | Alto
-Shooter | Call of Duty: MW      | 30.2        | 88        | Alto
-RPG     | The Witcher 3         | 28.8        | 93        | Alto
-...
-```
-
-**Insight de negocio**: Identifica títulos estrella que definen el mercado y pueden servir como benchmarks.
-
----
-
-### 4. **Análisis cruzado: Género x Plataforma**
-
-```sql
-SELECT 
-    g.genre,
-    p.platform,
-    COUNT(*) as num_juegos,
-    ROUND(AVG(f.metascore_num), 2) as calidad_promedio,
-    ROUND(SUM(f.copies_sold_millions_num), 2) as ventas_totales
-FROM fact_videogames f
-JOIN dim_genre g ON f.genre_id = g.genre_id
-JOIN dim_platform p ON f.platform_id = p.platform_id
-GROUP BY g.genre, p.platform
-HAVING num_juegos >= 10  -- Solo combinaciones significativas
-ORDER BY ventas_totales DESC
-LIMIT 15;
-```
-
-**Resultado esperado:**
-```
-genre  | platform | num_juegos | calidad_promedio | ventas_totales
--------|----------|------------|------------------|---------------
-Action | PS       | 345        | 79.2            | 1234.56
-Sports | Xbox     | 234        | 77.8            | 987.45
-RPG    | PC       | 198        | 83.4            | 876.23
-Shooter| PS       | 187        | 80.1            | 765.87
-...
-```
-
-**Insight de negocio**: Identifica qué combinaciones género-plataforma son ganadoras. Por ejemplo, RPGs funcionan mejor en PC, mientras que Sports domina en consolas.
-
----
-
-### 5. **¿Qué juegos superan el promedio de su plataforma?**
+**PYSPARK 1 – Juegos que superan el promedio de su plataforma**
 
 ```sql
 SELECT 
@@ -576,37 +489,23 @@ SELECT
     p.platform,
     f.metascore_num,
     f.metascore_medio_plataforma,
-    (f.metascore_num - f.metascore_medio_plataforma) as diferencia
+    (f.metascore_num - f.metascore_medio_plataforma) AS diferencia
 FROM fact_videogames f
-JOIN dim_platform p ON f.platform_id = p.platform_id
+JOIN dim_platform p 
+    ON f.platform_id = p.platform_id
 WHERE f.metascore_num > f.metascore_medio_plataforma
 ORDER BY diferencia DESC
 LIMIT 20;
 ```
 
-**Resultado esperado:**
-```
-name                    | platform | metascore | promedio_plat | diferencia
-------------------------|----------|-----------|---------------|------------
-The Last of Us Part II  | PS       | 93        | 78.2         | +14.8
-Red Dead Redemption 2   | Xbox     | 97        | 76.9         | +20.1
-Hades                   | Switch   | 93        | 77.8         | +15.2
-Half-Life: Alyx         | PC       | 93        | 79.5         | +13.5
-...
-```
-
-**Insight de negocio**: Identifica juegos excepcionales que sobresalen en su plataforma. Útil para estudiar casos de éxito y aprender mejores prácticas.
-
----
-
-### 6. **Correlación entre calidad y ventas**
+**PYSPARK 2 – Correlación entre calidad y ventas**
 
 ```sql
 SELECT 
     f.categoria_calidad,
-    COUNT(*) as num_juegos,
-    ROUND(AVG(f.copies_sold_millions_num), 2) as ventas_promedio,
-    ROUND(AVG(f.metascore_num), 2) as puntuacion_promedio
+    COUNT(*) AS num_juegos,
+    ROUND(AVG(f.copies_sold_millions_num), 2) AS ventas_promedio,
+    ROUND(AVG(f.metascore_num), 2) AS puntuacion_promedio
 FROM fact_videogames f
 GROUP BY f.categoria_calidad
 ORDER BY 
@@ -617,59 +516,6 @@ ORDER BY
         WHEN 'Mala' THEN 4
     END;
 ```
-
-**Resultado esperado:**
-```
-categoria_calidad | num_juegos | ventas_promedio | puntuacion_promedio
-------------------|------------|-----------------|--------------------
-Excelente         | 456        | 5.8            | 91.2
-Buena             | 1234       | 2.3            | 77.5
-Regular           | 2345       | 0.9            | 58.4
-Mala              | 876        | 0.3            | 42.1
-```
-
-**Insight de negocio**: Confirma que mayor calidad = mayores ventas. La inversión en calidad tiene ROI positivo.
-
----
-
-### 7. **Top juegos por plataforma**
-
-```sql
-WITH ranked_games AS (
-    SELECT 
-        f.name,
-        p.platform,
-        f.copies_sold_millions_num,
-        f.metascore_num,
-        ROW_NUMBER() OVER (PARTITION BY p.platform 
-                          ORDER BY f.copies_sold_millions_num DESC) as rank
-    FROM fact_videogames f
-    JOIN dim_platform p ON f.platform_id = p.platform_id
-)
-SELECT 
-    platform,
-    name,
-    copies_sold_millions_num,
-    metascore_num
-FROM ranked_games
-WHERE rank <= 5
-ORDER BY platform, rank;
-```
-
-**Resultado esperado:**
-```
-platform | name                     | copies_sold | metascore
----------|--------------------------|-------------|----------
-PC       | Minecraft                | 42.0       | 93
-PC       | The Witcher 3            | 28.8       | 93
-PC       | Counter-Strike: GO       | 25.6       | 83
-...
-PS       | Grand Theft Auto V       | 185.0      | 97
-PS       | The Last of Us Part II   | 10.2       | 93
-...
-```
-
-**Insight de negocio**: Identifica los títulos más importantes de cada plataforma. Útil para análisis competitivo.
 
 ---
 
