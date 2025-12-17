@@ -1,42 +1,32 @@
 -- Activar el soporte de claves foráneas en SQLite
 PRAGMA foreign_keys = ON;
 
--- --------------------------------------------------------------------------
--- Limpieza previa (por si las tablas ya existen)
--- --------------------------------------------------------------------------
+
 DROP TABLE IF EXISTS fact_videogame;
 DROP TABLE IF EXISTS dim_publisher;
 DROP TABLE IF EXISTS dim_year;
 DROP TABLE IF EXISTS dim_platform;
 DROP TABLE IF EXISTS dim_genre;
 
--- --------------------------------------------------------------------------
--- DIMENSIÓN: dim_genre  (Dimensión de Género)
--- --------------------------------------------------------------------------
+
 CREATE TABLE dim_genre (
     genre_id     INTEGER PRIMARY KEY,
     genre_name   TEXT    NOT NULL UNIQUE
 );
 
--- --------------------------------------------------------------------------
--- DIMENSIÓN: dim_platform  (Dimensión de Plataforma)
--- --------------------------------------------------------------------------
+
 CREATE TABLE dim_platform (
     platform_id    INTEGER PRIMARY KEY,
     platform_name  TEXT    NOT NULL UNIQUE
 );
 
--- --------------------------------------------------------------------------
--- DIMENSIÓN: dim_year  (Dimensión de Año)
--- --------------------------------------------------------------------------
+
 CREATE TABLE dim_year (
     year_id     INTEGER PRIMARY KEY,
     year_value  INTEGER NOT NULL UNIQUE
 );
 
--- --------------------------------------------------------------------------
--- DIMENSIÓN: dim_publisher  (Dimensión de Distribuidora / Publisher)
--- --------------------------------------------------------------------------
+
 CREATE TABLE dim_publisher (
     publisher_id    INTEGER PRIMARY KEY,
     publisher_name  TEXT    NOT NULL UNIQUE
